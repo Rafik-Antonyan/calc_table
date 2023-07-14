@@ -1,0 +1,40 @@
+#table_container::-webkit-scrollbar {
+  width: 10px;
+}
+
+#table_container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#table_container::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+#table_container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+#table_container {
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#order_table {
+  background-color: #f9f9fc;
+  width: 1400px;
+  height: 800px;
+  border-radius: 12px;
+  margin: 20px;
+  margin-top: 0;
+}
+
+#order_table,
+tr,
+td,
+th {
+  border: 2px solid rgb(211, 211, 212);
+  border-collapse: collapse;
+  text-align: center;
+}
