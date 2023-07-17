@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ExcelRenderer } from 'react-excel-renderer';
 import { Vector, Vector1 } from './assets/images';
 import { Box, Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
@@ -13,6 +13,8 @@ import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+
 
 function App() {
   const notifySuccess = (text) => toast.success(text);
@@ -40,16 +42,16 @@ function App() {
   };
 
   const open = () => {
-    const formatedToValue = to.$d.toISOString().substring(0, 10).split("-") 
-    const formatedFromValue = from.$d.toISOString().substring(0, 10).split("-") 
-    
-    if(+formatedFromValue[0] > +formatedToValue[0]){
+    const formatedToValue = to.$d.toISOString().substring(0, 10).split("-")
+    const formatedFromValue = from.$d.toISOString().substring(0, 10).split("-")
+
+    if (+formatedFromValue[0] > +formatedToValue[0]) {
       notifyError("Please select correct date!")
       return
-    }else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] > +formatedToValue[1]){
+    } else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] > +formatedToValue[1]) {
       notifyError("Please select correct date!")
       return
-    }else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] === +formatedToValue[1] && +formatedFromValue[2] > +formatedToValue[2]){
+    } else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] === +formatedToValue[1] && +formatedFromValue[2] > +formatedToValue[2]) {
       notifyError("Please select correct date!")
       return
     }
@@ -59,6 +61,61 @@ function App() {
       setOpenTable(true)
     }
   }
+
+
+  const inputFile = useRef(null);
+
+  const [csvFile, setCsvFile] = useState("");
+
+  const hadleFileUpLoad = e => {
+
+    const { files } = e.target;
+
+    if (files) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+        console.log(json);
+        // dispatch({ type: MARKETPLACE_TYPES.GET_IMPORT_DATA, payload: json });
+        // dispatch({ type: MARKETPLACE_TYPES.GET_IMPORT_DATA_NAME, payload: files[0].name })
+      };
+      reader.readAsArrayBuffer(e.target.files[0]);
+    }
+
+  }
+
+  const onButtonClick = () => {
+    console.log(111);
+    inputFile.current.click();
+  };
+  setTimeout(() => {
+    onButtonClick()
+  }, 1000)
+
+  return (
+    <React.Fragment>
+      <input
+        style={{ display: "none" }}
+        ref={inputFile}
+        type="file"
+        id={"csvFileInput"}
+        accept=".xlsx"
+        onChange={hadleFileUpLoad}
+      />
+      <div className='export-button' onClick={onButtonClick} >
+        <div className='export-main-button'>
+          <div className='import-logo'></div>
+          <a className='export-label'>Import File</a>
+        </div>
+      </div>
+
+
+    </React.Fragment>
+  );
 
   return <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
     <ToastContainer />
@@ -80,9 +137,9 @@ function App() {
       </h3>
       <p>Showing <span className='numbers'>198</span> from <span className='numbers'>893</span> results</p> */}
       <input id="file-upload" type="file" onChange={handleFile} />
-      <label htmlFor="file-upload" className="custom-file-upload">
+      {/* <label htmlFor="file-upload" className="custom-file-upload">
         Upload Excel file
-      </label>
+      </label> */}
       {!!Object.keys(data).length &&
         <Box sx={{ minWidth: 500, mt: 3 }}>
           <FormControl fullWidth>
