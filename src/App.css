@@ -85,9 +85,9 @@
 #info_div #price {
   background-color: #faf3e1;
 }
-/* input[type="file"] {
+input[type="file"] {
   display: none;
-} */
+}
 .custom-file-upload {
   border: 1px solid #ccc;
   display: inline-block;

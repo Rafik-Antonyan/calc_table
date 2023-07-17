@@ -80,9 +80,9 @@ function App() {
       </h3>
       <p>Showing <span className='numbers'>198</span> from <span className='numbers'>893</span> results</p> */}
       <input id="file-upload" type="file" onChange={handleFile} />
-      {/* <label htmlFor="file-upload" className="custom-file-upload">
+      <label htmlFor="file-upload" className="custom-file-upload">
         Upload Excel file
-      </label> */}
+      </label>
       {!!Object.keys(data).length &&
         <Box sx={{ minWidth: 500, mt: 3 }}>
           <FormControl fullWidth>
