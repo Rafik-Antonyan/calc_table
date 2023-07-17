@@ -63,59 +63,58 @@ function App() {
   }
 
 
-  const inputFile = useRef(null);
+  // const inputFile = useRef(null);
 
-  const [csvFile, setCsvFile] = useState("");
+  // const [csvFile, setCsvFile] = useState("");
 
-  const hadleFileUpLoad = e => {
+  // const hadleFileUpLoad = e => {
 
-    const { files } = e.target;
+  //   const { files } = e.target;
 
-    if (files) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = e.target.result;
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet);
-        console.log(json);
-        // dispatch({ type: MARKETPLACE_TYPES.GET_IMPORT_DATA, payload: json });
-        // dispatch({ type: MARKETPLACE_TYPES.GET_IMPORT_DATA_NAME, payload: files[0].name })
-      };
-      reader.readAsArrayBuffer(e.target.files[0]);
-    }
+  //   if (files) {
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       const data = e.target.result;
+  //       const workbook = XLSX.read(data, { type: "array" });
+  //       const sheetName = workbook.SheetNames[0];
+  //       const worksheet = workbook.Sheets[sheetName];
+  //       const json = XLSX.utils.sheet_to_json(worksheet);
 
-  }
+  //       const sheetName1 = workbook.SheetNames[1];
+  //       const worksheet1 = workbook.Sheets[sheetName1];
+  //       const json1 = XLSX.utils.sheet_to_json(worksheet1);
+  //       console.log(json,'json', sheetName);
+  //       console.log(json1,'json1', sheetName1);
 
-  const onButtonClick = () => {
-    console.log(111);
-    inputFile.current.click();
-  };
-  setTimeout(() => {
-    onButtonClick()
-  }, 1000)
+  //       // dispatch({ type: MARKETPLACE_TYPES.GET_IMPORT_DATA, payload: json });
+  //       // dispatch({ type: MARKETPLACE_TYPES.GET_IMPORT_DATA_NAME, payload: files[0].name })
+  //     };
+  //     console.log(reader.readAsArrayBuffer(e.target.files[0]),'----');
+      
+  //   }
 
-  return (
-    <React.Fragment>
-      <input
-        style={{ display: "none" }}
-        ref={inputFile}
-        type="file"
-        id={"csvFileInput"}
-        accept=".xlsx"
-        onChange={hadleFileUpLoad}
-      />
-      <div className='export-button' onClick={onButtonClick} >
-        <div className='export-main-button'>
-          <div className='import-logo'></div>
-          <a className='export-label'>Import File</a>
-        </div>
-      </div>
+  // }
+
+  // const onButtonClick = () => {
+  //   console.log(111);
+  //   inputFile.current.click();
+  // };
 
 
-    </React.Fragment>
-  );
+  // return (
+  //   <React.Fragment>
+  //     <input
+  //       ref={inputFile}
+  //       type="file"
+  //       id={"csvFileInput"}
+  //       accept=".xlsx"
+  //       onChange={hadleFileUpLoad}
+  //     />
+ 
+
+
+  //   </React.Fragment>
+  // );
 
   return <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
     <ToastContainer />
@@ -137,9 +136,9 @@ function App() {
       </h3>
       <p>Showing <span className='numbers'>198</span> from <span className='numbers'>893</span> results</p> */}
       <input id="file-upload" type="file" onChange={handleFile} />
-      {/* <label htmlFor="file-upload" className="custom-file-upload">
+      <label htmlFor="file-upload" className="custom-file-upload">
         Upload Excel file
-      </label> */}
+      </label>
       {!!Object.keys(data).length &&
         <Box sx={{ minWidth: 500, mt: 3 }}>
           <FormControl fullWidth>
