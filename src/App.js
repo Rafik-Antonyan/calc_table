@@ -46,26 +46,23 @@ function App() {
     const formatedFromValue = from.$d.toISOString().substring(0, 10).split("-")
 
     if (+formatedFromValue[0] > +formatedToValue[0]) {
-      notifyError("Please select correct date!")
+      notifyError("Please select correct date")
       return
     } else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] > +formatedToValue[1]) {
-      notifyError("Please select correct date!")
+      notifyError("Please select correct date")
       return
     } else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] === +formatedToValue[1] && +formatedFromValue[2] > +formatedToValue[2]) {
-      notifyError("Please select correct date!")
+      notifyError("Please select correct date")
       return
     }
 
     if (typeof from !== "string" && typeof to !== "string") {
-      console.log("---------");
       setOpenTable(true)
     }
   }
 
 
   // const inputFile = useRef(null);
-
-  // const [csvFile, setCsvFile] = useState("");
 
   // const hadleFileUpLoad = e => {
 
@@ -75,6 +72,7 @@ function App() {
   //     const reader = new FileReader();
   //     reader.onload = (e) => {
   //       const data = e.target.result;
+
   //       const workbook = XLSX.read(data, { type: "array" });
   //       const sheetName = workbook.SheetNames[0];
   //       const worksheet = workbook.Sheets[sheetName];
@@ -214,7 +212,7 @@ function App() {
                 label="To"
                 value={to}
                 onChange={setTo}
-                inputFormat="E MMM dd yyyy HH:MM:SS O"
+                minDate = {from ? from : null}
               />
               <Button id='see_result' onClick={open}>see result</Button>
             </DemoContainer>
