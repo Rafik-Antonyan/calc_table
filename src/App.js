@@ -7,11 +7,16 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import 'react-calendar/dist/Calendar.css';
-import './App.css';
 import MuiTable from './components/MuiTable/MuiTable';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-calendar/dist/Calendar.css';
+import 'react-toastify/dist/ReactToastify.css';
+import './App.css';
+import { format } from 'date-fns';
 
 function App() {
+  const notifySuccess = (text) => toast.success(text);
+  const notifyError = (text) => toast.error(text);
   const currentDate = getCurrentDate()
   // const [age, setAge] = useState("");
   // const [status, setStatus] = useState("")
@@ -35,12 +40,28 @@ function App() {
   };
 
   const open = () => {
+    const formatedToValue = to.$d.toISOString().substring(0, 10).split("-") 
+    const formatedFromValue = from.$d.toISOString().substring(0, 10).split("-") 
+    
+    if(+formatedFromValue[0] > +formatedToValue[0]){
+      notifyError("Please select correct date!")
+      return
+    }else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] > +formatedToValue[1]){
+      notifyError("Please select correct date!")
+      return
+    }else if (+formatedFromValue[0] === +formatedToValue[0] && +formatedFromValue[1] === +formatedToValue[1] && +formatedFromValue[2] > +formatedToValue[2]){
+      notifyError("Please select correct date!")
+      return
+    }
+
     if (typeof from !== "string" && typeof to !== "string") {
+      console.log("---------");
       setOpenTable(true)
     }
   }
 
   return <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <ToastContainer />
     <div id='info_div'>
       <h1>Internal Purchase Pricing and Stock Value Tracking </h1>
       {/* <h3>
@@ -59,9 +80,9 @@ function App() {
       </h3>
       <p>Showing <span className='numbers'>198</span> from <span className='numbers'>893</span> results</p> */}
       <input id="file-upload" type="file" onChange={handleFile} />
-      <label htmlFor="file-upload" className="custom-file-upload">
+      {/* <label htmlFor="file-upload" className="custom-file-upload">
         Upload Excel file
-      </label>
+      </label> */}
       {!!Object.keys(data).length &&
         <Box sx={{ minWidth: 500, mt: 3 }}>
           <FormControl fullWidth>
@@ -137,6 +158,7 @@ function App() {
                 label="To"
                 value={to}
                 onChange={setTo}
+                inputFormat="E MMM dd yyyy HH:MM:SS O"
               />
               <Button id='see_result' onClick={open}>see result</Button>
             </DemoContainer>
@@ -144,7 +166,7 @@ function App() {
         </>
       }
 
-      {openTable && <MuiTable close={() =>setOpenTable(false)}/>}
+      {openTable && <MuiTable close={() => setOpenTable(false)} />}
     </div>
 
     {/* {!!selectedOption.length && <Calendar onChange={() => { }} value={1} />} */}
