@@ -5,7 +5,6 @@ import Thead from "./Thead";
 import Tbody from "./Tbody";
 
 const Table = ({ data }) => {
-  console.log(data);
   const [headers, setHeaders] = useState([]);
   const [body, setBody] = useState([]);
   useEffect(() => {

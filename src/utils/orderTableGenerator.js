@@ -1,43 +1,56 @@
-export const orderTableGenerator = (data) => {
-    console.log(data);
-    let formatedData = data.rows.splice(2).map(row => {
-        for (let i = 0; i < row.length; i++) {
-            if (!row[i]) {
-                row = row.splice(0, i)
-                break;
-            }
+export const orderTableGenerator = ({ orderData, salesData, skuData, type = "file", selectedWareHouse }) => {
+    const minLength = Math.min(orderData.length, salesData.length, skuData.length);
+    orderData = orderData.splice(0, minLength);
+    skuData = skuData.splice(0, minLength)
+    let formatedSalesData = []
+    salesData.splice(0, minLength).map(elm => {
+        let obj = {}
+        for (let name in elm) {
+            obj[name.trim()] = elm[name]
         }
-        return row
-    }).filter(row => row.length)
-    let body = { sku: [], stock: [] }
-    for (let i = 0; i < formatedData?.length; i++) {
-        const [sku, stock, ...orderData] = formatedData[i];
-
-        body.sku.push(sku);
-        body.stock.push(stock);
-
-        for (let j = 0; j < orderData.length; j += 2) {
-            const orderIndex = Math.floor(j / 2) + 1;
-            if (!body[`order${orderIndex}`]) {
-                body[`order${orderIndex}`] = { qty: [], unitPrice: [] };
-            }
-            body[`order${orderIndex}`].qty.push(orderData[j]);
-            body[`order${orderIndex}`].unitPrice.push(orderData[j + 1]);
-        }
+        formatedSalesData.push(obj)
+        return elm
+    });
+    let fields
+    if (type === "file") {
+        fields = Object.keys(formatedSalesData[0]).slice(2)
+    } else {
+        fields = Object.keys(formatedSalesData[0])
     }
-    let headText = Object.keys(body)
-    let headers = []
-
-    for (let i = 0; i < headText?.length; i++) {
-        if (!Array.isArray(body[headText[i]])) {
-            headText[i] = {
-                [headText[i]]: [
-                    ...Object.keys(body[headText[i]])
-                ]
-            }
+    let formatedData = []
+    for (let j = 0; j < minLength; j++) {
+        let prices = {
+            [orderData[j]["Order 1"]]: orderData[j]["__EMPTY_1"],
+            [orderData[j]["Order 2"]]: orderData[j]["__EMPTY_2"],
+            [orderData[j]["Order 3"]]: orderData[j]["__EMPTY_3"],
+            currentPrice: orderData[j]["__EMPTY_1"],
+            avalibleCount: [orderData[j]["Order 1"]],
+            priceIndex: 0
         }
-        headers.push(headText[i])
+        let rowData = {}
+        for (let i = 0; i < fields.length; i++) {
+            let price = 0
+            if (formatedSalesData[j][fields[i]] < prices.avalibleCount) {
+                price = formatedSalesData[j][fields[i]] * prices[Object.keys(prices)[prices.priceIndex]]
+                prices.avalibleCount -= formatedSalesData[j][fields[i]]
+            } else {
+                let currentPrice = prices.avalibleCount * prices.currentPrice
+                prices.priceIndex++
+                prices.currentPrice = prices[Object.keys(prices)[prices.priceIndex]]
+                let nextCount = formatedSalesData[j][fields[i]] - prices.avalibleCount
+                let nextPrice = nextCount * prices[Object.keys(prices)[prices.priceIndex]]
+                prices.avalibleCount = +Object.keys(prices)[prices.priceIndex] - nextCount
+                price = currentPrice + nextPrice
+            }
+            rowData[fields[i]] = price * selectedWareHouse
+        }
+        rowData["SKU"] = skuData[j]["SKU"]
+        rowData["stock"] = prices.avalibleCount
+        rowData["Stock Threshold"] = skuData[j]["Stock Threshold"]
+        rowData["eof"] = prices.avalibleCount * prices.currentPrice
+        formatedData.push(rowData)
     }
-
-    return { headers, body }
+    fields.unshift("SKU")
+    fields.push("stock", "Stock Threshold", "eof")
+    return { fields, formatedData }
 }

@@ -2,7 +2,6 @@ import React from "react";
 import "./tbody.css"
 
 const Tbody = ({ body }) => {
-  console.log(body);
   return (
     <>
       {Object.keys(body).length ? (

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-function useEnter(handler) {
+export const useEnter = (handler) => {
     useEffect(() => {
         const listener = (event) => {
             if (event.charCode === 13) {
@@ -13,4 +13,3 @@ function useEnter(handler) {
         };
     }, [handler]);
 }
-export default useEnter

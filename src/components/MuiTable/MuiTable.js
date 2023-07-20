@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -10,67 +10,45 @@ import TableRow from '@mui/material/TableRow';
 import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Input } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { useOutSideClick, useEnter } from 'hooks';
+import { notifyError } from 'utils'
 import "./muiTable.css"
-import useEnter from '../../hooks/useEnter';
-import { useOutSideClick } from '../../hooks/useOutSideClick';
+import { useDispatch } from 'react-redux';
+import { CALCULATION_TYPES } from 'actions/actionType';
+import { removeTable } from 'actions/calculateAction';
 
-const columns = [
-    { id: 'name', label: 'Name', minWidth: 170 },
-    { id: 'code', label: 'ISO\u00a0Code', minWidth: 100 },
-    {
-        id: 'population',
-        label: 'Population',
-        minWidth: 170,
-        align: 'right',
-        format: (value) => value.toLocaleString('en-US'),
-    },
-    {
-        id: 'size',
-        label: 'Size\u00a0(km\u00b2)',
-        minWidth: 170,
-        align: 'right',
-        format: (value) => value.toLocaleString('en-US'),
-    },
-    {
-        id: 'density',
-        label: 'Density',
-        minWidth: 170,
-        align: 'right',
-        format: (value) => value.toFixed(2),
-    },
-];
+const createHeader = (fields) => {
+    let columns = [];
 
-function createData(name, code, population, size) {
-    const density = population / size;
-    return { name, code, population, size, density };
+    fields.forEach(field => {
+        columns.push({ id: field, label: field.toUpperCase(), minWidth: field === "SKU" ? 170 : 120 })
+    })
+
+    return columns
 }
 
-const MuiTable = ({ close }) => {
+const MuiTable = ({ data, fields, tableIndex }) => {
     const callRef = useRef(null)
-    const [rows, setRows] = useState([
-        createData('India', 'IN', 1324171354, 3287263),
-        createData('China', 'CN', 1403500365, 9596961),
-        createData('Italy', 'IT', 60483973, 301340),
-        createData('United States', 'US', 327167434, 9833520),
-        createData('Canada', 'CA', 37602103, 9984670),
-        createData('Australia', 'AU', 25475400, 7692024),
-        createData('Germany', 'DE', 83019200, 357578),
-        createData('Ireland', 'IE', 4857000, 70273),
-        createData('Mexico', 'MX', 126577691, 1972550),
-        createData('Japan', 'JP', 126317000, 377973),
-        createData('France', 'FR', 67022000, 640679),
-        createData('United Kingdom', 'GB', 67545757, 242495),
-        createData('Russia', 'RU', 146793744, 17098246),
-        createData('Nigeria', 'NG', 200962417, 923768),
-        createData('Brazil', 'BR', 210147125, 8515767),
-    ]);
-
+    const [rows, setRows] = useState([]);
     const [page, setPage] = useState(0);
     const [tableHeight, setTableHeight] = useState("max");
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [selectedCall, setSelectedCell] = useState(null)
+    const [columns, setColumns] = useState([])
+    const [currentPrice, setCurrentPrice] = useState(0)
+    const [lastChangedStock, setLastChangedStock] = useState(null)
+    const dispatch = useDispatch()
 
-    const handleChangePage = (event, newPage) => {
+    useEffect(() => {
+        if (fields.length) {
+            setColumns(createHeader(fields))
+            setRows(data)
+        }
+    }, [data])
+
+
+    const handleChangePage = (_, newPage) => {
         setPage(newPage);
     };
 
@@ -84,85 +62,119 @@ const MuiTable = ({ close }) => {
     }
 
     const closeTable = () => {
-        close()
+        dispatch(removeTable(tableIndex))
+    }
+
+    const openInput = (id, field, price) => {
+        if (field !== "SKU") {
+            setSelectedCell(id)
+            setCurrentPrice(price)
+            setLastChangedStock(id.split(" ")[0])
+        }
     }
 
     const tableCallOnChange = (e, index, columnId) => {
+        if (e.target.value.match(/[a-zA-Z]/g)) {
+            notifyError("Unexpected character.")
+            return
+        }
         const formattedValue = e.target.value.replace(/,/g, "");
+        const numbers = formattedValue.split(".")[0]
+        const decemals = formattedValue.split(".")[1]
         const copyRows = [...rows]
-        copyRows[index][columnId] = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        if (typeof decemals === "string") {
+            copyRows[index][columnId] = numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + decemals
+        } else {
+            copyRows[index][columnId] = (numbers * 100 / 100).toLocaleString()
+        }
+
         setRows(copyRows)
     }
 
-    const initValue = () =>{
+    const initValue = () => {
+        setRows(rows.map(row => {
+            if (row.SKU === lastChangedStock) {
+                row.eof = +row.stock * +currentPrice
+            }
+            return row
+        }))
         setSelectedCell('')
+    }
+
+    const setColor = (id, row) => {
+        return id === "stock" && row.stock < row["Stock Threshold"] ? { background: "#ff4d4d" } : id === "stock" ? { background: "green" } : {}
     }
 
     useEnter(initValue)
     useOutSideClick(callRef, initValue)
 
     return (
-        <Paper sx={{ width: '100%', overflow: 'hidden', mt: "10px" }}>
-            <div style={{ textAlign: "end" }}>
-                <RemoveIcon className='table_menu_button' onClick={minimizeTable} />
-                <CloseIcon className='table_menu_button' onClick={closeTable} />
-            </div>
-            <TableContainer sx={tableHeight === "min" ? { maxHeight: 200 } : {}}>
-                <Table stickyHeader aria-label="sticky table" sx={{ border: 1 }}>
-                    <TableHead>
-                        <TableRow>
-                            {columns.map((column) => (
-                                <TableCell
-                                    sx={{ fontWeight: 'bold', borderBottom: "1px solid black" }}
-                                    key={column.id}
-                                    align={column.align}
-                                    style={{ minWidth: column.minWidth }}
-                                >
-                                    {column.label}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {rows
-                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((row, index) => {
-                                return (
-                                    <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                                        {columns.map((column) => {
-                                            const value = row[column.id];
+        <>
+            {
+                Object.keys(data).length ?
+                    <Paper sx={{ width: '100%', overflow: 'hidden', mt: "10px" }}>
+                        <div style={{ textAlign: "end" }}>
+                            {tableHeight === "min" ? <AddIcon className='table_menu_button' onClick={minimizeTable} /> : <RemoveIcon className='table_menu_button' onClick={minimizeTable} />}
+                            <CloseIcon className='table_menu_button' onClick={closeTable} />
+                        </div>
+                        <TableContainer id='table_container' sx={tableHeight === "min" ? { maxHeight: 200 } : {}}>
+                            <Table stickyHeader aria-label="sticky table" sx={{ border: 1 }}>
+                                <TableHead>
+                                    <TableRow>
+                                        {columns && columns.map((column) => (
+                                            <TableCell
+                                                sx={{ fontWeight: 'bold', borderBottom: "1px solid black" }}
+                                                key={column.id}
+                                                align={column.align}
+                                                style={{ minWidth: column.minWidth }}
+                                            >
+                                                {column.label}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {columns && !!rows.length && rows
+                                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                        .map((row, index) => {
                                             return (
-                                                <TableCell key={column.id} align={column.align} onDoubleClick={() => setSelectedCell(column.id + row.name)}>
-                                                    {column.id + row.name === selectedCall ?
-                                                        <Input ref={callRef} value={column.format && typeof value === 'number'
-                                                            ? column.format(value)
-                                                            : value} onChange={(e) => tableCallOnChange(e, index, column.id)} />
-                                                        :
-                                                        <>
-                                                            {column.format && typeof value === 'number'
-                                                                ? column.format(value)
-                                                                : value}
-                                                        </>
-                                                    }
-                                                </TableCell>
+                                                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                    {row && columns.map((column) => {
+                                                        const value = row[column.id];
+                                                        return (
+                                                            <TableCell style={setColor(column.id, row)} key={column.id} align={column.align} onDoubleClick={() => openInput(row.SKU + " " + column.id, column.id, (row.eof / row.stock))}>
+                                                                {row.SKU + " " + column.id === selectedCall ?
+                                                                    <Input ref={callRef} value={value} onChange={(e) => tableCallOnChange(e, index, column.id)} />
+                                                                    :
+                                                                    <>
+                                                                        {!(column.id === "SKU" || column.id === "stock" || column.id === "Stock Threshold") && "$"}
+                                                                        {column.format && typeof value === 'number'
+                                                                            ? column.format(value)
+                                                                            : value}
+                                                                    </>
+                                                                }
+                                                            </TableCell>
+                                                        );
+                                                    })}
+                                                </TableRow>
                                             );
                                         })}
-                                    </TableRow>
-                                );
-                            })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
-                component="div"
-                count={rows.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-        </Paper>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 25, 100]}
+                            component="div"
+                            count={rows.length ? rows.length : 0}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                    </Paper>
+                    : <></>
+            }
+        </>
     )
 }
 
