@@ -48,7 +48,7 @@
   border: 2px solid #ccc;
 }
 
-#info_div > h1 {
+#info_div h1 {
   color: #242533;
   font-size: 16;
   padding: 10px 0 20px 0;
@@ -133,26 +133,37 @@ input[type="file"] {
   background-color: rgb(0, 102, 0);
 }
 
-#open_modal_container_button{
+#open_modal_container_button {
   margin-top: 10px;
   width: 200px;
   font-weight: bold;
   font-size: 16px;
   padding: 5px 10px;
   background-color: #242533;
-  color:white;
+  color: white;
   cursor: pointer;
   border-radius: 10px;
   box-shadow: 2px 4px #888888;
 }
 
-.date_picker{
+.date_picker {
   width: 40%;
 }
 
-#see_result{
+#see_result {
   color: white;
   background-color: #0f6a7a;
   border: 2px solid #ccc;
   width: 20%;
+}
+
+#save_icon:hover {
+  cursor: pointer;
+}
+
+#save_icon:hover::after {
+  content: "Save";
+  position: absolute;
+  background-color: #ccc;
+  padding: 10px;
 }

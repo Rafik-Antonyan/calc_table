@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { orderTableGenerator, notifyError, getCurrentDate, selectPeriod } from 'utils';
 import { CustomModal } from 'components/Modal';
 import { useDispatch, useSelector } from 'react-redux';
+import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import { addNewFields, addNewTable, addNewWareHouse, selectWareHouse, setEditedData, setInitData, setPeriod } from "actions/calculateAction"
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -99,7 +100,13 @@ function App() {
     <ToastContainer />
 
     <div id='info_div'>
-      <h1>Internal Purchase Pricing and Stock Value Tracking </h1>
+      <Box sx={{ display: 'flex', justifyContent: "space-between" }}>
+        <h1>Internal Purchase Pricing and Stock Value Tracking </h1>
+        <div id="save_icon">
+          <BookmarksIcon sx={{ fontSize: "30px", color: "#00b386" }} />
+        </div>
+      </Box>
+
       {tableCount.map((_, index) => {
         return <div key={index}>
           {!fields[index] ?

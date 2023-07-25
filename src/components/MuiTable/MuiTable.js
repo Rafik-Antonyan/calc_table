@@ -48,7 +48,7 @@ const MuiTable = ({ data, fields, tableIndex }) => {
     const dispatch = useDispatch()
     const { initData } = useSelector(state => state.calculation)
     useEffect(() => {
-        let copy = [...fields]
+        let copy = JSON.parse(JSON.stringify(fields))
         if (copy.at(-1) === "manual") {
             copy.pop()
         }
@@ -161,11 +161,12 @@ const MuiTable = ({ data, fields, tableIndex }) => {
                                                             </TableCell>
                                                         );
                                                     })}
-                                                    <TableCell>
-                                                        <Button variant='contained' onClick={() => editColumn(row.SKU)}>
-                                                            <EditIcon />
-                                                        </Button>
-                                                    </TableCell>
+                                                    {fields.at(-1) !== "manual" &&
+                                                        <TableCell>
+                                                            <Button variant='contained' onClick={() => editColumn(row.SKU)}>
+                                                                <EditIcon />
+                                                            </Button>
+                                                        </TableCell>}
                                                 </TableRow>
                                             );
                                         }) :

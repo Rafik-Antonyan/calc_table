@@ -83,6 +83,21 @@ const calculationReducer = (state = initialState, action) => {
                 ...state,
                 periods: [...state.periods, action.payload],
             }
+        case CALCULATION_TYPES.SET_EDITED_DATA:
+            return {
+                ...state,
+                calculationTables: [...state.calculationTables.map((table, index) => {
+                    if (index === state.editedTableIndex) {
+                        table = [...action.payload]
+                    }
+                    return table
+                })],
+            }
+        case CALCULATION_TYPES.SET_TABLE_INDEX:
+            return {
+                ...state,
+                editedTableIndex: action.payload,
+            }
         default:
             return state;
     }
