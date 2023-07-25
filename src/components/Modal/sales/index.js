@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useEnter } from 'hooks';
 import "./sales.css"
 
-export const Sales = ({ next, manualSalesData, setManualSalesData }) => {
+export const Sales = ({ next, manualSalesData, setManualSalesData, back }) => {
     const [dateType, setDateType] = useState("")
     const [salesOrder, setSalesOrder] = useState({})
     const [isOpenModal, setIsOpenModal] = useState(false)
@@ -72,20 +72,27 @@ export const Sales = ({ next, manualSalesData, setManualSalesData }) => {
                             >
                                 <Box id='month_modal'>
                                     <Box id='month_modal_header' sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                        <h2>How many items you sold in <span id='selected_month'>{selectedMonth}</span> ?</h2>
+                                        <h2>How many items you sold in {selectedMonth} ?</h2>
                                         <Button onClick={closeModal}>
                                             <CloseIcon sx={{ color: "black" }} />
                                         </Button>
                                     </Box>
                                     <Box>
                                         <TextField sx={{ width: "100%" }} label="Sales" variant="outlined" type="number" value={salesOrder[selectedMonth] ? salesOrder[selectedMonth] : ""} onChange={(e) => setSalesOrder({ ...salesOrder, [selectedMonth]: +e.target.value })} />
+                                        <Box sx={{ mt: "10px" }}>
+                                            <Button onClick={closeModal} sx={{ width: "50%" }} variant="outlined">cancel</Button>
+                                            <Button onClick={closeModal} sx={{ width: "50%" }} variant="contained">save</Button>
+                                        </Box >
                                     </Box>
                                 </Box>
                             </Modal>
-                            <Button onClick={save}>see result</Button>
                         </DemoContainer>
                     </LocalizationProvider>
                 }
+                <Box sx={{ mt: "10px" }}>
+                    <Button onClick={back} sx={{ width: "50%" }} variant="outlined">Back</Button>
+                    <Button onClick={save} sx={{ width: "50%" }} variant="contained">Calculate</Button>
+                </Box >
             </Box>
         </Box>
     )

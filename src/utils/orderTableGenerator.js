@@ -1,9 +1,9 @@
 export const orderTableGenerator = ({ orderData, salesData, skuData, type = "file", selectedWareHouse }) => {
     const minLength = Math.min(orderData.length, salesData.length, skuData.length);
-    orderData = orderData.splice(0, minLength);
-    skuData = skuData.splice(0, minLength)
+    orderData = orderData.slice(0, minLength);
+    skuData = skuData.slice(0, minLength)
     let formatedSalesData = []
-    salesData.splice(0, minLength).map(elm => {
+    salesData.slice(0, minLength).map(elm => {
         let obj = {}
         for (let name in elm) {
             obj[name.trim()] = elm[name]
@@ -52,5 +52,8 @@ export const orderTableGenerator = ({ orderData, salesData, skuData, type = "fil
     }
     fields.unshift("SKU")
     fields.push("stock", "Stock Threshold", "eof")
+    if (type === "manual") {
+        fields.push("manual")
+    }
     return { fields, formatedData }
 }

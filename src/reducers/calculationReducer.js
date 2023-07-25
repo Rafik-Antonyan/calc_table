@@ -5,7 +5,11 @@ const initialState = {
     calculationTables: [],
     active: {},
     tabAccess: 0,
-    selectedWareHouse: { name: "", price: "" }
+    selectedWareHouse: [{ name: "", price: "" }],
+    initData: [],
+    editValues: [],
+    periods: [],
+    editedTableIndex: null
 };
 
 const calculationReducer = (state = initialState, action) => {
@@ -39,7 +43,45 @@ const calculationReducer = (state = initialState, action) => {
         case CALCULATION_TYPES.SELECT_WAREHOUSE:
             return {
                 ...state,
-                selectedWareHouse: action.payload
+                selectedWareHouse:
+                    state.selectedWareHouse.map((wareHouse, ind) => {
+                        if (ind === action.payload.index) {
+                            return action.payload.name
+                        }
+                        return wareHouse
+                    })
+            }
+        case CALCULATION_TYPES.CLEAR_ACTIVE_VALUES:
+            return {
+                ...state,
+                active: {},
+                tabAccess: 0
+            }
+        case CALCULATION_TYPES.ADD_NEW_WARE_HOUSE:
+            return {
+                ...state,
+                selectedWareHouse: [...state.selectedWareHouse, { name: "", price: "" }]
+            }
+        case CALCULATION_TYPES.SET_INIT_DATA:
+            return {
+                ...state,
+                initData: [...state.initData, action.payload]
+            }
+        case CALCULATION_TYPES.EDIT_ROW_DATA:
+            return {
+                ...state,
+                editValues: action.payload
+            }
+        case CALCULATION_TYPES.SAVE_EDIT:
+            return {
+                ...state,
+                editValues: [],
+                initData: action.payload
+            }
+        case CALCULATION_TYPES.ADD_PERIOD:
+            return {
+                ...state,
+                periods: [...state.periods, action.payload],
             }
         default:
             return state;

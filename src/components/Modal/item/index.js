@@ -1,4 +1,4 @@
-import { Button, TextField } from "@mui/material"
+import { Box, Button, TextField } from "@mui/material"
 import { activeValues, increaseTabAccess } from "actions/calculateAction"
 import { useEnter } from "hooks"
 import { useEffect, useState } from "react"
@@ -34,9 +34,14 @@ export const Item = ({ next, skuManagment, setSkuManagment }) => {
 
     useEnter(nextStep)
 
-    return <>
-        <TextField label="SKU" variant="outlined" value={sku} onChange={(e) => setSku(e.target.value)} />
-        <TextField label="Stock Threshold" variant="outlined" value={stock} onChange={(e) => setStock(+e.target.value)} type="number" />
-        <Button onClick={nextStep} sx={{ height: "56px", width: "200px" }} variant="contained">Next</Button>
-    </>
+    return <Box>
+        <Box>
+            <TextField label="SKU" variant="outlined" value={sku} onChange={(e) => setSku(e.target.value)} sx={{ width: "50%" }} />
+            <TextField label="Stock Threshold" variant="outlined" value={stock} onChange={(e) => setStock(+e.target.value)} sx={{ width: "50%" }} type="number" />
+        </Box>
+        <Box sx={{ mt: "10px" }}>
+            <Button sx={{ width: "50%" }} variant="outlined" disabled>Back</Button>
+            <Button onClick={nextStep} sx={{ width: "50%" }} variant="contained">Next</Button>
+        </Box >
+    </Box>
 }

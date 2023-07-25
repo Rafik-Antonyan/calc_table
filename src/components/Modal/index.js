@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
@@ -10,8 +10,7 @@ import './modal.css'
 import { Sales } from './sales';
 import { notifyError, orderTableGenerator } from 'utils';
 import { useDispatch, useSelector } from 'react-redux';
-import { CALCULATION_TYPES } from 'actions/actionType';
-import { addNewFields, addNewTable } from 'actions/calculateAction';
+import { addNewFields, addNewTable, clearActiveValues } from 'actions/calculateAction';
 
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -35,17 +34,22 @@ function CustomTabPanel(props) {
 
 export const CustomModal = ({ data, setData }) => {
     const dispatch = useDispatch()
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(1);
     const [skuManagment, setSkuManagment] = useState([])
     const [manualOrderData, setManualOrderData] = useState([])
     const [manualSalesData, setManualSalesData] = useState([])
 
     const { tabAccess, selectedWareHouse } = useSelector(state => state.calculation)
 
+    useEffect(() => {
+        setValue(tabAccess)
+    }, [tabAccess])
+
     const save = () => {
-        let { fields, formatedData } = orderTableGenerator({ salesData: manualSalesData, orderData: manualOrderData, skuData: skuManagment, type: "manual", selectedWareHouse: selectedWareHouse.price })
+        let { fields, formatedData } = orderTableGenerator({ salesData: manualSalesData, orderData: manualOrderData, skuData: skuManagment, type: "manual", selectedWareHouse: selectedWareHouse[selectedWareHouse.length - 1].price })
         dispatch(addNewTable(formatedData))
         dispatch(addNewFields(fields))
+        dispatch(clearActiveValues())
         setData(false)
     }
 
@@ -79,10 +83,10 @@ export const CustomModal = ({ data, setData }) => {
                     <Item next={() => setValue(value + 1)} skuManagment={skuManagment} setSkuManagment={setSkuManagment} />
                 </CustomTabPanel>
                 <CustomTabPanel value={value} index={1}>
-                    <Order next={() => setValue(value + 1)} manualOrderData={manualOrderData} setManualOrderData={setManualOrderData} />
+                    <Order next={() => setValue(value + 1)} manualOrderData={manualOrderData} setManualOrderData={setManualOrderData} back={() => setValue(value - 1)} />
                 </CustomTabPanel>
                 <CustomTabPanel value={value} index={2}>
-                    <Sales next={save} manualSalesData={manualSalesData} setManualSalesData={setManualSalesData} />
+                    <Sales next={save} manualSalesData={manualSalesData} setManualSalesData={setManualSalesData} back={() => setValue(value - 1)} />
                 </CustomTabPanel>
             </Box>
         </Modal>

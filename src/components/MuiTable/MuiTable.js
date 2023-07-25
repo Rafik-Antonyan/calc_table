@@ -9,14 +9,15 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { Input } from '@mui/material';
+import { Box, Button, Input, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useOutSideClick, useEnter } from 'hooks';
+import { useOutSideClick, useEnter, useDebounce } from 'hooks';
 import { notifyError } from 'utils'
 import "./muiTable.css"
-import { useDispatch } from 'react-redux';
-import { CALCULATION_TYPES } from 'actions/actionType';
-import { removeTable } from 'actions/calculateAction';
+import { useDispatch, useSelector } from 'react-redux';
+import { editRow, removeTable } from 'actions/calculateAction';
+import EditIcon from '@mui/icons-material/Edit';
+import { EditModal } from './editModal';
 
 const createHeader = (fields) => {
     let columns = [];
@@ -31,6 +32,8 @@ const createHeader = (fields) => {
 const MuiTable = ({ data, fields, tableIndex }) => {
     const callRef = useRef(null)
     const [rows, setRows] = useState([]);
+    const [searchedSku, setSearchedSku] = useState("")
+    const [dataFromSearch, setDataFromSearch] = useState([])
     const [page, setPage] = useState(0);
     const [tableHeight, setTableHeight] = useState("max");
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -38,15 +41,26 @@ const MuiTable = ({ data, fields, tableIndex }) => {
     const [columns, setColumns] = useState([])
     const [currentPrice, setCurrentPrice] = useState(0)
     const [lastChangedStock, setLastChangedStock] = useState(null)
+    const [filteredFields, setFilteredFields] = useState([])
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [editIndex, setEditIndex] = useState(null)
+    const [editSku, setEditSku] = useState("")
     const dispatch = useDispatch()
+    const { initData } = useSelector(state => state.calculation)
+    useEffect(() => {
+        let copy = [...fields]
+        if (copy.at(-1) === "manual") {
+            copy.pop()
+        }
+        setFilteredFields(copy)
+    }, [fields, data])
 
     useEffect(() => {
-        if (fields.length) {
-            setColumns(createHeader(fields))
+        if (filteredFields.length) {
+            setColumns(createHeader(filteredFields))
             setRows(data)
         }
-    }, [data])
-
+    }, [filteredFields])
 
     const handleChangePage = (_, newPage) => {
         setPage(newPage);
@@ -65,32 +79,6 @@ const MuiTable = ({ data, fields, tableIndex }) => {
         dispatch(removeTable(tableIndex))
     }
 
-    const openInput = (id, field, price) => {
-        if (field !== "SKU") {
-            setSelectedCell(id)
-            setCurrentPrice(price)
-            setLastChangedStock(id.split(" ")[0])
-        }
-    }
-
-    const tableCallOnChange = (e, index, columnId) => {
-        if (e.target.value.match(/[a-zA-Z]/g)) {
-            notifyError("Unexpected character.")
-            return
-        }
-        const formattedValue = e.target.value.replace(/,/g, "");
-        const numbers = formattedValue.split(".")[0]
-        const decemals = formattedValue.split(".")[1]
-        const copyRows = [...rows]
-        if (typeof decemals === "string") {
-            copyRows[index][columnId] = numbers.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + decemals
-        } else {
-            copyRows[index][columnId] = (numbers * 100 / 100).toLocaleString()
-        }
-
-        setRows(copyRows)
-    }
-
     const initValue = () => {
         setRows(rows.map(row => {
             if (row.SKU === lastChangedStock) {
@@ -105,20 +93,43 @@ const MuiTable = ({ data, fields, tableIndex }) => {
         return id === "stock" && row.stock < row["Stock Threshold"] ? { background: "#ff4d4d" } : id === "stock" ? { background: "green" } : {}
     }
 
+    const search = () => {
+        setDataFromSearch(data.filter(elm => elm.SKU.toLowerCase().startsWith(debounced)))
+    }
+
+    const debounced = useDebounce(searchedSku, 300)
+
+    useEffect(() => {
+        search()
+    }, [debounced, data])
+
     useEnter(initValue)
     useOutSideClick(callRef, initValue)
 
+    const editColumn = (sku) => {
+        let copy = initData[tableIndex]
+        let index = copy.skuData.findIndex(elm => elm.SKU === sku)
+        let sales = copy.salesData.find((_, ind) => ind === index)
+        setEditSku(sku)
+        setEditIndex(index)
+        setIsEditModalOpen(true)
+        dispatch(editRow(sales))
+    }
     return (
         <>
+            {editSku && <EditModal value={isEditModalOpen} setValue={setIsEditModalOpen} rowIndex={editIndex} tableIndex={tableIndex} sku={editSku} />}
             {
                 Object.keys(data).length ?
                     <Paper sx={{ width: '100%', overflow: 'hidden', mt: "10px" }}>
-                        <div style={{ textAlign: "end" }}>
-                            {tableHeight === "min" ? <AddIcon className='table_menu_button' onClick={minimizeTable} /> : <RemoveIcon className='table_menu_button' onClick={minimizeTable} />}
-                            <CloseIcon className='table_menu_button' onClick={closeTable} />
-                        </div>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <TextField label="Search by sku" variant="outlined" sx={{ my: 1, width: "40%" }} value={searchedSku} onChange={(e) => setSearchedSku(e.target.value)} />
+                            <Box>
+                                {tableHeight === "min" ? <AddIcon className='table_menu_button' onClick={minimizeTable} /> : <RemoveIcon className='table_menu_button' onClick={minimizeTable} />}
+                                <CloseIcon className='table_menu_button' onClick={closeTable} />
+                            </Box>
+                        </Box>
                         <TableContainer id='table_container' sx={tableHeight === "min" ? { maxHeight: 200 } : {}}>
-                            <Table stickyHeader aria-label="sticky table" sx={{ border: 1 }}>
+                            <Table stickyHeader aria-label="sticky table" sx={{ border: 2 }}>
                                 <TableHead>
                                     <TableRow>
                                         {columns && columns.map((column) => (
@@ -134,31 +145,51 @@ const MuiTable = ({ data, fields, tableIndex }) => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {columns && !!rows.length && rows
+                                    {debounced.length ? dataFromSearch
                                         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                         .map((row, index) => {
                                             return (
-                                                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                <TableRow hover role="checkbox" tabIndex={-1} key={index} sx={{ alignItems: "center" }}>
                                                     {row && columns.map((column) => {
                                                         const value = row[column.id];
                                                         return (
-                                                            <TableCell style={setColor(column.id, row)} key={column.id} align={column.align} onDoubleClick={() => openInput(row.SKU + " " + column.id, column.id, (row.eof / row.stock))}>
-                                                                {row.SKU + " " + column.id === selectedCall ?
-                                                                    <Input ref={callRef} value={value} onChange={(e) => tableCallOnChange(e, index, column.id)} />
-                                                                    :
-                                                                    <>
+                                                            <TableCell style={setColor(column.id, row)} key={column.id} align={column.align}>
+                                                                {!(column.id === "SKU" || column.id === "stock" || column.id === "Stock Threshold") && "$"}
+                                                                {column.format && typeof value === 'number'
+                                                                    ? column.format(value)
+                                                                    : value}
+                                                            </TableCell>
+                                                        );
+                                                    })}
+                                                    <TableCell>
+                                                        <Button variant='contained' onClick={() => editColumn(row.SKU)}>
+                                                            <EditIcon />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        }) :
+                                        <>
+                                            {columns && !!rows.length && rows
+                                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                                .map((row, index) => {
+                                                    return (
+                                                        <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                            {row && columns.map((column) => {
+                                                                const value = row[column.id];
+                                                                return (
+                                                                    <TableCell style={setColor(column.id, row)} key={column.id} align={column.align}>
                                                                         {!(column.id === "SKU" || column.id === "stock" || column.id === "Stock Threshold") && "$"}
                                                                         {column.format && typeof value === 'number'
                                                                             ? column.format(value)
                                                                             : value}
-                                                                    </>
-                                                                }
-                                                            </TableCell>
-                                                        );
-                                                    })}
-                                                </TableRow>
-                                            );
-                                        })}
+                                                                    </TableCell>
+                                                                );
+                                                            })}
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                        </>}
                                 </TableBody>
                             </Table>
                         </TableContainer>
